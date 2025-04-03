@@ -5,19 +5,40 @@ import { debounce } from "lodash";
 import "./styles.css";
 
 const fetchBreweries = async ({ pageParam = 1 }) => {
-    const res = await fetch(
+    try {
+      const res = await fetch(
         `https://api.openbrewerydb.org/v1/breweries?page=${pageParam}&per_page=50`
-    );
-    return res.json();
-};
-
-const searchBreweries = async ({ pageParam = 1, query }) => {
-    if (!query) return [];
-    const res = await fetch(
+      );
+      const data = await res.json();
+      
+      return data;
+    } catch (error) {
+      console.error("Error fetching breweries:", error);
+      return {
+        error: error.message,
+        _hasError: true
+      };
+    }
+  };
+  
+  const searchBreweries = async ({ pageParam = 1, query }) => {
+    try {
+      if (!query) return [];
+      
+      const res = await fetch(
         `https://api.openbrewerydb.org/v1/breweries/search?query=${query}&page=${pageParam}&per_page=50`
-    );
-    return res.json();
-};
+      );
+      const data = await res.json();
+      
+      return data;
+    } catch (error) {
+      console.error("Error searching breweries:", error);
+      return {
+        error: error.message,
+        _hasError: true
+      };
+    }
+  };
 
 export default function BreweryList() {
     const [searchTerm, setSearchTerm] = useState("");
@@ -33,8 +54,8 @@ export default function BreweryList() {
         queryKey: ["breweries"],
         queryFn: fetchBreweries,
         getNextPageParam: (lastPage, allPages) => {
-            // Check if the current page is full (50 items) to determine if there are more pages
-            return lastPage.length === 50 ? allPages.length + 1 : undefined;
+            // Only request next page if we received items on the current page
+            return lastPage.length > 0 ? allPages.length + 1 : undefined;
         },
     });
 
@@ -48,8 +69,8 @@ export default function BreweryList() {
         queryKey: ["searchBreweries", searchTerm],
         queryFn: ({ pageParam = 1 }) => searchBreweries({ pageParam, query: searchTerm }),
         getNextPageParam: (lastPage, allPages) => {
-            // Similar check for search: if the current page has 50 items, there might be another page
-            return lastPage.length === 50 ? allPages.length + 1 : undefined;
+            // Only request next page if we received items on the current page
+            return lastPage.length > 0 ? allPages.length + 1 : undefined;
         },
         enabled: !!searchTerm, // Only enable search query if there is a search term
     });
