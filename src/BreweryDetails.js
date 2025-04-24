@@ -5,7 +5,7 @@ import "./styles.css"; // Import styles
 const fetchBreweryDetails = async (id) => {
   try {
     const res = await fetch(`https://api.openbrewerydb.org/v1/breweries/${id}`);
-    const data = await res.json();
+    const data = res.json();
 
     return data;
   } catch (error) {

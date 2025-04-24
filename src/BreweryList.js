@@ -9,7 +9,7 @@ const fetchBreweries = async ({ pageParam = 1 }) => {
       const res = await fetch(
         `https://api.openbrewerydb.org/v1/breweries?page=${pageParam}&per_page=50`
       );
-      const data = await res.json();
+      const data = res.json();
       
       return data;
     } catch (error) {
@@ -28,7 +28,7 @@ const fetchBreweries = async ({ pageParam = 1 }) => {
       const res = await fetch(
         `https://api.openbrewerydb.org/v1/breweries/search?query=${query}&page=${pageParam}&per_page=50`
       );
-      const data = await res.json();
+      const data = res.json();
       
       return data;
     } catch (error) {
