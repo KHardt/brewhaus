@@ -9,6 +9,15 @@ const fetchBreweries = async ({ pageParam = 1 }) => {
       const res = await fetch(
         `https://api.openbrewerydb.org/v1/breweries?page=${pageParam}&per_page=50`
       );
+
+      if (!res.ok) {
+        return {
+            error: `Failed to load breweries (${res.status})`,
+            _hasError: true,
+            data: []
+        };
+      }
+
       const data = res.json();
       
       return data;
@@ -16,7 +25,8 @@ const fetchBreweries = async ({ pageParam = 1 }) => {
       console.error("Error fetching breweries:", error);
       return {
         error: error.message,
-        _hasError: true
+        _hasError: true,
+        data: []
       };
     }
   };
@@ -28,8 +38,16 @@ const fetchBreweries = async ({ pageParam = 1 }) => {
       const res = await fetch(
         `https://api.openbrewerydb.org/v1/breweries/search?query=${query}&page=${pageParam}&per_page=50`
       );
-      const data = res.json();
-      
+
+      if (!res.ok) {
+        return {
+            error: `Failed to find results (${res.status})`,
+            _hasError: true,
+            data: []
+        };
+      }
+
+      const data = await res.json();
       return data;
     } catch (error) {
       console.error("Error searching breweries:", error);
