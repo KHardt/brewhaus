@@ -5,9 +5,17 @@ import "./styles.css"; // Import styles
 const fetchBreweryDetails = async (id) => {
   try {
     const res = await fetch(`https://api.openbrewerydb.org/v1/breweries/${id}`);
-    const data = res.json();
 
+    if (!res.ok) {
+        return {
+            error: `Failed to find results (${res.status})`,
+            _hasError: true,
+            data: []
+        };
+      }
+    const data = await res.json();
     return data;
+
   } catch (error) {
     console.error("Error fetching brewery details:", error);
     return {
@@ -58,7 +66,7 @@ export default function BreweryDetails() {
           <strong>Address:</strong> {brewery.street}
           {brewery?.city && `, ${brewery.city}`}
           {brewery?.state && `, ${brewery.state}`}
-          {brewery?.postal_code && brewery.postal_code}
+          {brewery?.postal_code && `, ${brewery.postal_code}`}
         </p>
       )}
 
