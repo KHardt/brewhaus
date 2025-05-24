@@ -34,9 +34,11 @@ const fetchBreweries = async ({ pageParam = 1 }) => {
   const searchBreweries = async ({ pageParam = 1, query }) => {
     try {
       if (!query) return [];
+
+      const encodedQuery = encodeURIComponent(query.trim());
       
       const res = await fetch(
-        `https://api.openbrewerydb.org/v1/breweries/search?query=${query}&page=${pageParam}&per_page=50`
+        `https://api.openbrewerydb.org/v1/breweries/search?query=${encodedQuery}&page=${pageParam}&per_page=50`
       );
 
       if (!res.ok) {
@@ -45,6 +47,13 @@ const fetchBreweries = async ({ pageParam = 1 }) => {
             _hasError: true,
             data: []
         };
+      }
+
+      //TODO- test in POSTMAN
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.warn('not JSON');
+        return [];
       }
 
       const data = await res.json();
@@ -72,9 +81,12 @@ export default function BreweryList() {
         queryKey: ["breweries"],
         queryFn: fetchBreweries,
         getNextPageParam: (lastPage, allPages) => {
-            // Only request next page if we received items on the current page
-            return lastPage.length > 0 ? allPages.length + 1 : undefined;
+            if (lastPage.length < 50) {
+                return undefined;
+            }
+            return allPages.length + 1;
         },
+        enabled: !searchTerm,
     });
 
     // Infinite query for search results
@@ -87,8 +99,10 @@ export default function BreweryList() {
         queryKey: ["searchBreweries", searchTerm],
         queryFn: ({ pageParam = 1 }) => searchBreweries({ pageParam, query: searchTerm }),
         getNextPageParam: (lastPage, allPages) => {
-            // Only request next page if we received items on the current page
-            return lastPage.length > 0 ? allPages.length + 1 : undefined;
+            if (lastPage.length < 50) {
+                return undefined;
+            }
+            return allPages.length + 1;
         },
         enabled: !!searchTerm, // Only enable search query if there is a search term
     });
@@ -96,6 +110,12 @@ export default function BreweryList() {
     const debouncedSearch = useRef(
         debounce((value) => setSearchTerm(value), 300)
     ).current;
+
+    // useEffect(() => {
+    //     return () => {
+    //         debouncedSearch.cancel();
+    //     };
+    // },[debouncedSearch]);
 
     // Infinite Scroll: Fetch next page when the last item is visible
     useEffect(() => {
